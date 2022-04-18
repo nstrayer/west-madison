@@ -1,30 +1,62 @@
-<script lang="ts">
-  import SummaryLine from "./SummaryLine.svelte";
+<script context="module" lang="ts">
+  import * as d3 from "d3";
 
-  type Reading = { time: string; co2: number; temp: number; humidity: number };
-  let air_readings: Reading[] = [];
+  export type Reading = {
+    time: string;
+    co2: number;
+    temp: number;
+    humidity: number;
+  };
 
-  // Make sure that the vectors of data all keep updated witih the data
-  $: co2 = air_readings.map((r) => r.co2);
-  $: temp = air_readings.map((r) => r.temp * (9 / 5) + 32);
-  $: humidity = air_readings.map((r) => r.humidity);
+  function C_to_F(deg_in_c: number) {
+    return deg_in_c * (9 / 5) + 32;
+  }
 
-  console.log("Connecting to the remote server!");
-  // Pull data from Pie server and update the air_readings variable
-  fetch("http://67.205.131.141/data?nlines=50")
-    .then((response) => response.json())
-    .then((data) => {
-      air_readings = data.readings as Reading[];
-    });
+  export type Measurement = "temp" | "co2" | "humidity";
+
+  const parseTime = d3.timeParse("%m/%d/%y %H:%M:%S");
 </script>
 
-<h2>Summary of recent office air readings</h2>
-<SummaryLine unit="degrees" values={temp}>
-  <span slot="name">Temperature:</span>
-</SummaryLine>
-<SummaryLine unit="%" values={humidity}>
-  <span slot="name">Humidity:</span>
-</SummaryLine>
-<SummaryLine unit="ppm" values={co2}>
-  <span slot="name">CO<sub>2</sub></span>
-</SummaryLine>
+<script lang="ts">
+  import SummaryChart from "./SummaryChart.svelte";
+
+  const num_lines = 1000;
+
+  // Pull data from Pie server and update the air_readings variable
+
+  const get_observations = async () => {
+    const req = await fetch(`http://67.205.131.141/data?nlines=${num_lines}`);
+    const readings = (await req.json()).readings;
+
+    return readings
+      .map((d) => {
+        const time = parseTime(d.time);
+
+        if (time === null) return null;
+
+        const temp = C_to_F(d.temp);
+        const humidity = d.humidity;
+        const co2 = d.co2;
+
+        return {
+          time,
+          temp,
+          humidity,
+          co2,
+        };
+      })
+      .filter((d) => d !== null);
+  };
+
+  const obs_req = get_observations();
+</script>
+
+{#await obs_req}
+  <p>Fetching data from office raspberry pi...</p>
+{:then readings}
+  <SummaryChart data={readings} name="co2" unit="ppm" />
+  <SummaryChart data={readings} name="temp" unit="degrees" />
+  <SummaryChart data={readings} name="humidity" unit="%" />
+{:catch error}
+  <p>Something went wrong: {error.message}</p>
+{/await}
