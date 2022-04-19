@@ -21,11 +21,11 @@
   import * as d3 from "d3";
 
   import { onMount } from "svelte";
-  import type { Measurement, Reading } from "./Summary.svelte";
+  import type { Measurement, ParsedReading } from "./Summary.svelte";
 
   let el: HTMLDivElement;
   export let unit: string;
-  export let data: Reading[];
+  export let data: ParsedReading[];
   export let name: Measurement;
 
   const values: number[] = data.map((d) => d[name]);
@@ -138,14 +138,14 @@
     /* outline: 1px solid salmon; */
 
     margin-inline: auto;
-    margin-block: 10px;
+    margin-block: 15px;
     box-shadow: var(--shadow-elevation-medium);
-    background-color: #e1f7ff;
-    color: hsl(15deg 7% 15%);
+    background-color: hsl(180 50% 93%);
+    color: hsl(248 31% 15%);
     width: min(500px, 100%);
     padding: 15px;
 
-    border-radius: 2px;
+    border-radius: 1px;
   }
 
   h2,
@@ -157,13 +157,14 @@
 
   h2 {
     margin-bottom: 5px;
+    font-size: 1.6rem;
   }
   p {
     margin-bottom: 10px;
   }
 
   .units {
-    opacity: 0.7;
+    opacity: 0.75;
     font-size: 0.8rem;
   }
 
