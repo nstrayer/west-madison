@@ -5,6 +5,8 @@
     return Math.round(x * multiplier) / multiplier;
   }
 
+  type Observation = { val: number; time: Date };
+
   const margin_top = 20; // top margin, in pixels
   const margin_right = 30; // right margin, in pixels
   const margin_bottom = 30; // bottom margin, in pixels
@@ -15,6 +17,8 @@
     co2: [300, 1000],
     humidity: [0, 80],
   };
+
+  const curve = d3.curveLinear;
 </script>
 
 <script lang="ts">
@@ -28,25 +32,23 @@
   export let data: ParsedReading[];
   export let name: Measurement;
 
-  const values: number[] = data.map((d) => d[name]);
-
-  const times = data.map((d) => d.time);
+  const values: Observation[] = data.map((d) => ({
+    val: d[name],
+    time: d.time,
+  }));
+  const n_obs = values.length;
 
   const average_value = roundTo(
-    values.reduce((s, x) => s + x / values.length, 0),
+    values.reduce((s, x) => s + x.val / n_obs, 0),
     1
   );
 
-  const curve = d3.curveLinear;
-  const n_obs = values.length;
-  const x_domain = d3.extent(times);
+  const [y_min, y_max] = d3.extent(data, (d) => d[name]);
+  const y_domain = extents_by_measure[name];
+  if (y_domain[0] > y_min) y_domain[0] = y_min;
+  if (y_domain[1] < y_max) y_domain[1] = y_max;
 
-  const y_domain = d3.extent(values);
-  // const [y_min, y_max] = d3.extent(values);
-  // const y_domain = extents_by_measure[name];
-
-  // if (y_domain[0] > y_min) y_domain[0] = y_min;
-  // if (y_domain[1] < y_max) y_domain[1] = y_max;
+  const x_domain = d3.extent(data, (d) => d.time);
 
   const I = d3.range(n_obs);
 
@@ -68,10 +70,10 @@
 
     // Construct a line generator.
     const line = d3
-      .line()
+      .line<Observation>()
       .curve(curve)
-      .x((i: number) => x_scale(times[i]))
-      .y((i: number) => y_scale(values[i]));
+      .x((d: Observation) => x_scale(d.time))
+      .y((d: Observation) => y_scale(d.val));
 
     const svg = d3
       .create("svg")
@@ -113,7 +115,7 @@
       .attr("stroke", "currentColor")
       .attr("stroke-width", 1.5)
       .attr("stroke-opacity", 0.65)
-      .attr("d", line(I));
+      .attr("d", line(values));
 
     el.append(svg.node());
   });

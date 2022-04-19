@@ -14,8 +14,12 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
     background-color: #fffffe;
+    box-sizing: border-box;
   }
 
+  :global(*, *::after, *::before) {
+    box-sizing: border-box;
+  }
   main {
     text-align: center;
     padding: 1em;

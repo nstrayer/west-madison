@@ -23,14 +23,6 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@observablehq/plot@^0.4.3":
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/@observablehq/plot/-/plot-0.4.3.tgz#9d5bcc14b988a89c001f9099e0ac25ff1466f454"
-  integrity sha512-uGR8Jy2sFhWc6vIeSQkW2JuePJXs9b8k1tQdN4RZN9USifATQxjFt5E5f0TIyH4J9ZdyM8/0wHHUQTUPZvT3yA==
-  dependencies:
-    d3 "^7.3.0"
-    isoformat "0.2"
-
 "@rollup/pluginutils@^4.1.2":
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/@rollup/pluginutils/-/pluginutils-4.1.2.tgz#ed5821c15e5e05e32816f5fb9ec607cdf5a75751"
@@ -563,7 +555,7 @@ d3-zoom@3:
     d3-selection "2 - 3"
     d3-transition "2 - 3"
 
-d3@^7.3.0, d3@^7.4.4:
+d3@^7.4.4:
   version "7.4.4"
   resolved "https://registry.yarnpkg.com/d3/-/d3-7.4.4.tgz#bfbf87487c37d3196efebd5a63e3a0ed8299d8ff"
   integrity sha512-97FE+MYdAlV3R9P74+R3Uar7wUKkIFu89UWMjEaDhiJ9VxKvqaMxauImy8PC2DdBkdM2BxJOIoLxPrcZUyrKoQ==
@@ -870,11 +862,6 @@ is-number@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/is-number/-/is-number-7.0.0.tgz#7535345b896734d5f80c4d06c50955527a14f12b"
   integrity sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==
-
-isoformat@0.2:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/isoformat/-/isoformat-0.2.1.tgz#2526344a4276a101b2881848dc337d1d2ae74494"
-  integrity sha512-tFLRAygk9NqrRPhJSnNGh7g7oaVWDwR0wKh/GM2LgmPa50Eg4UfyaCO4I8k6EqJHl1/uh2RAD6g06n5ygEnrjQ==
 
 kleur@^4.1.4:
   version "4.1.4"
