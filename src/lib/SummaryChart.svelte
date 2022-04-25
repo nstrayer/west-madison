@@ -5,6 +5,14 @@
     return Math.round(x * multiplier) / multiplier;
   }
 
+  function avgVal(arr: number[], precision: number = 1) {
+    const n_obs = arr.length;
+    return roundTo(
+      arr.reduce((s, x) => s + x / n_obs, 0),
+      1
+    );
+  }
+
   type Observation = { val: number; time: Date };
 
   const margin_top = 20; // top margin, in pixels
@@ -38,10 +46,14 @@
   }));
   const n_obs = values.length;
 
-  const average_value = roundTo(
-    values.reduce((s, x) => s + x.val / n_obs, 0),
-    1
-  );
+  // const average_value = roundTo(
+  //   values.reduce((s, x) => s + x.val / n_obs, 0),
+  //   1
+  // );
+
+  const average_value = avgVal(values.map((x) => x.val));
+
+  const current_value = avgVal(values.slice(-10).map((x) => x.val));
 
   const [y_min, y_max] = d3.extent(data, (d) => d[name]);
   const y_domain = extents_by_measure[name];
@@ -122,8 +134,13 @@
 </script>
 
 <div class="container">
-  <h2>{name}</h2>
-  <p>avg: {average_value} <span class="units">{unit}</span></p>
+  <h2>
+    {name} = {current_value}
+    <span class="units">{unit}</span>
+  </h2>
+  <p>
+    avg: {average_value} <span class="units">{unit}</span>
+  </p>
   <div class="line-chart" bind:this={el} />
 </div>
 
