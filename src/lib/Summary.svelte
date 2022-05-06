@@ -37,7 +37,7 @@
 <script lang="ts">
   import SummaryChart from "./SummaryChart.svelte";
 
-  const num_lines = 1000;
+  const num_lines = 7000;
 
   // Pull data from Pie server and update the air_readings variable
 
