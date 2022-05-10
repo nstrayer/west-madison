@@ -43,7 +43,7 @@
 
   const get_observations = async () => {
     const req = await fetch(
-      `http://wmadisonatelier.com/data?nlines=${num_lines}`
+      `https://wmadisonatelier.com/data?nlines=${num_lines}`
     );
     const readings = (await req.json()).readings as Reading[];
 
