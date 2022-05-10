@@ -42,7 +42,9 @@
   // Pull data from Pie server and update the air_readings variable
 
   const get_observations = async () => {
-    const req = await fetch(`http://67.205.131.141/data?nlines=${num_lines}`);
+    const req = await fetch(
+      `http://wmadisonatelier.com/data?nlines=${num_lines}`
+    );
     const readings = (await req.json()).readings as Reading[];
 
     return readings
