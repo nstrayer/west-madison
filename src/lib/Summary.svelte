@@ -60,23 +60,34 @@
 <script lang="ts">
   import SummaryChart from "./SummaryChart.svelte";
 
-  let num_hours = 3;
+  let num_hours_input = 6;
+  let num_hours = num_hours_input;
+  let obs_req: Promise<ParsedReading[]>;
 
+  function update_num_hours(e: SubmitEvent) {
+    e.preventDefault();
+    num_hours = num_hours_input;
+  }
   // Pull data from Pie server and update the air_readings variable
   $: obs_req = get_observations(num_hours);
 </script>
 
-<label>
-  <span>Number of hours to pull: </span>
-  <input type="number" bind:value={num_hours} min="1" max="24" />
-</label>
+<form on:submit={update_num_hours}>
+  <label>
+    <span>Number of hours to pull: </span>
+    <input type="number" bind:value={num_hours_input} min="1" max="24" />
+    <button type="submit">Update</button>
+  </label>
+</form>
+<p>{num_hours} hours</p>
 
 {#await obs_req}
   <p>Fetching data from office raspberry pi...</p>
 {:then readings}
   <h3>
-    Time range: {format_time(readings[0].time, true)} - {format_time(
-      last(readings).time
+    Time range: {format_time(last(readings).time)} - {format_time(
+      readings[0].time,
+      true
     )}
   </h3>
   <SummaryChart data={readings} name="co2" unit="ppm" />

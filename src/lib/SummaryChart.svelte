@@ -48,7 +48,7 @@
 
   const average_value = avgVal(values.map((x) => x.val));
 
-  const current_value = avgVal(values.slice(-10).map((x) => x.val));
+  const current_value = avgVal(values.slice(10).map((x) => x.val));
 
   const [y_min, y_max] = d3.extent(data, (d) => d[name]);
   const y_domain = extents_by_measure[name];
