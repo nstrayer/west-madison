@@ -7,10 +7,7 @@
 
   function avgVal(arr: number[], precision: number = 1) {
     const n_obs = arr.length;
-    return roundTo(
-      arr.reduce((s, x) => s + x / n_obs, 0),
-      1
-    );
+    return arr.reduce((s, x) => s + x / n_obs, 0);
   }
 
   type Observation = { val: number; time: Date };
@@ -27,6 +24,8 @@
   };
 
   const curve = d3.curveLinear;
+
+  const format_num = d3.format(",.1~f");
 </script>
 
 <script lang="ts">
@@ -40,15 +39,25 @@
   export let data: ParsedReading[];
   export let name: Measurement;
 
-  const values: Observation[] = data.map((d) => ({
+  const observations: Observation[] = data.map((d) => ({
     val: d[name],
     time: d.time,
   }));
-  const n_obs = values.length;
 
-  const average_value = avgVal(values.map((x) => x.val));
+  // console.log(name, observations);
+  const n_obs = observations.length;
 
-  const current_value = avgVal(values.slice(10).map((x) => x.val));
+  const values = observations.map((x) => x.val);
+  const average_value = format_num(avgVal(values));
+  const current_value = format_num(avgVal(values.slice(-10)));
+  const min_val = format_num(d3.min(values));
+  const max_val = format_num(d3.max(values));
+
+  const min_obs = observations[d3.minIndex(values)];
+  const max_obs = observations[d3.maxIndex(values)];
+  // console.log(name, { min_obs, max_obs });
+
+  // console.log(`Max ${name}: ${max_val}${unit}`);
 
   const [y_min, y_max] = d3.extent(data, (d) => d[name]);
   const y_domain = extents_by_measure[name];
@@ -99,13 +108,14 @@
       .attr("transform", `translate(${margin_left},0)`)
       .call(y_axis)
       .call((g) => g.select(".domain").remove())
-      .call((g) =>
-        g
-          .selectAll(".tick line")
+      .call((g) => {
+        g.selectAll(".tick line")
           .clone()
           .attr("x2", chart_w - margin_left - margin_right)
-          .attr("stroke-opacity", 0.1)
-      )
+          .attr("stroke-opacity", 0.1);
+
+        g.selectAll(".tick").style("opacity", 0.5);
+      })
       .call((g) =>
         g
           .append("text")
@@ -122,20 +132,54 @@
       .attr("stroke", "currentColor")
       .attr("stroke-width", 1.5)
       .attr("stroke-opacity", 0.65)
-      .attr("d", line(values));
+      .attr("d", line(observations));
 
+    const anotate_point = (
+      obs: Observation,
+      above_or_below: "above" | "below"
+    ) => {
+      const x_pos = x_scale(obs.time);
+      const y_pos = y_scale(obs.val);
+      const above = above_or_below === "above";
+      const offset_amnt = 20;
+      const text_offset = offset_amnt * (above ? 1 : -1);
+      const pad = 2;
+      const color = "darkgrey";
+
+      svg
+        .append("line")
+        .attr("stroke", "currentcolor")
+        .style("opacity", 0.3)
+        .attr("stroke-width", 1)
+        .attr("x1", x_pos)
+        .attr("x2", x_pos)
+        .attr("y1", y_pos + (above ? -1 : 1) * pad)
+        .attr("y2", y_pos - text_offset + (above ? 1 : -1) * pad);
+
+      svg
+        .append("text")
+        .attr("x", x_pos)
+        .attr("y", y_pos - text_offset)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", above ? "baseline" : "hanging")
+        .attr("stroke-width", 1)
+        .style("font-size", "0.8rem")
+        .style("font-weight", "300")
+        .text(format_num(obs.val));
+    };
+
+    anotate_point(max_obs, "below");
+    anotate_point(min_obs, "above");
     el.append(svg.node());
   });
 </script>
 
 <div class="container">
   <h2>
-    {name} = {current_value}
+    {name} : {current_value}
     <span class="units">{unit}</span>
   </h2>
-  <p>
-    avg: {average_value} <span class="units">{unit}</span>
-  </p>
+
   <div class="line-chart" bind:this={el} />
 </div>
 
@@ -162,19 +206,13 @@
     border-radius: 1px;
   }
 
-  h2,
-  p {
+  h2 {
     font-weight: 200;
     text-align: right;
     margin: 0;
-  }
-
-  h2 {
     margin-bottom: 5px;
     font-size: 1.6rem;
-  }
-  p {
-    margin-bottom: 10px;
+    letter-spacing: 1px;
   }
 
   .units {

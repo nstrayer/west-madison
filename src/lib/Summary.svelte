@@ -53,7 +53,7 @@
     const parsed_readings: ParsedReading[] = (await req.json()).map(
       parseReadingLine
     );
-    return parsed_readings;
+    return d3.sort(parsed_readings, (x) => x.time);
   };
 </script>
 
@@ -79,19 +79,17 @@
     <button type="submit">Update</button>
   </label>
 </form>
-<p>{num_hours} hours</p>
 
 {#await obs_req}
   <p>Fetching data from office raspberry pi...</p>
 {:then readings}
   <h3>
-    Time range: {format_time(last(readings).time)} - {format_time(
-      readings[0].time,
-      true
+    Time range: {format_time(readings[0].time, true)} - {format_time(
+      last(readings).time
     )}
   </h3>
   <SummaryChart data={readings} name="co2" unit="ppm" />
-  <SummaryChart data={readings} name="temp" unit="degrees" />
+  <SummaryChart data={readings} name="temp" unit="℉" />
   <SummaryChart data={readings} name="humidity" unit="%" />
 {:catch error}
   <p>Something went wrong: {error.message}</p>
