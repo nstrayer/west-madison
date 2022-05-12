@@ -31,47 +31,45 @@
 
   export type Measurement = "temp" | "co2" | "humidity";
 
-  const parseTime = d3.timeParse("%m/%d/%y %H:%M:%S");
+  function parseReadingLine(line: string): ParsedReading {
+    const [timestamp, co2, temp_in_c, humidity] = line.split(",").map(Number);
+
+    if (!(timestamp && co2 && temp_in_c && humidity)) {
+      console.error("Can't parse line of data", line);
+      throw new Error("Can't parse line of data");
+    }
+
+    return {
+      time: new Date(timestamp * 1000),
+      co2: co2,
+      temp: C_to_F(Number(temp_in_c)),
+      humidity: humidity,
+    };
+  }
+
+  const get_observations = async (num_hours: number) => {
+    const req = await fetch(`https://wmadisonatelier.com/data/${num_hours}`);
+
+    const parsed_readings: ParsedReading[] = (await req.json()).map(
+      parseReadingLine
+    );
+    return parsed_readings;
+  };
 </script>
 
 <script lang="ts">
   import SummaryChart from "./SummaryChart.svelte";
 
-  const num_lines = 7000;
+  let num_hours = 3;
 
   // Pull data from Pie server and update the air_readings variable
-
-  const get_observations = async () => {
-    const req = await fetch(
-      `https://wmadisonatelier.com/data?nlines=${num_lines}`
-    );
-    const readings = (await req.json()).readings as Reading[];
-
-    return readings
-      .map((d) => {
-        const time = parseTime(d.time);
-
-        if (time === null) return null;
-
-        // Move the time to the correct time zone in the least robust way possible
-        time.setHours(time.getHours() - 5);
-
-        const temp = C_to_F(d.temp);
-        const humidity = d.humidity;
-        const co2 = d.co2;
-
-        return {
-          time,
-          temp,
-          humidity,
-          co2,
-        };
-      })
-      .filter((d) => d !== null);
-  };
-
-  const obs_req = get_observations();
+  $: obs_req = get_observations(num_hours);
 </script>
+
+<label>
+  <span>Number of hours to pull: </span>
+  <input type="number" bind:value={num_hours} min="1" max="24" />
+</label>
 
 {#await obs_req}
   <p>Fetching data from office raspberry pi...</p>
@@ -87,3 +85,12 @@
 {:catch error}
   <p>Something went wrong: {error.message}</p>
 {/await}
+
+<style>
+  label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+  }
+</style>

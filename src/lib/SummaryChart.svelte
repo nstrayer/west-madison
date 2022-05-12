@@ -46,11 +46,6 @@
   }));
   const n_obs = values.length;
 
-  // const average_value = roundTo(
-  //   values.reduce((s, x) => s + x.val / n_obs, 0),
-  //   1
-  // );
-
   const average_value = avgVal(values.map((x) => x.val));
 
   const current_value = avgVal(values.slice(-10).map((x) => x.val));
