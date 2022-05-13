@@ -22,10 +22,10 @@
   import { onMount } from "svelte";
   import type { Measurement, ParsedReading } from "./Summary.svelte";
 
-  const margin_top = 20; // top margin, in pixels
-  const margin_right = 30; // right margin, in pixels
-  const margin_bottom = 30; // bottom margin, in pixels
-  const margin_left = 40;
+  const margin_top = 24; // top margin, in pixels
+  const margin_right = 20; // right margin, in pixels
+  const margin_bottom = 22; // bottom margin, in pixels
+  const margin_left = 50;
   const container_pad = 18; // How much padding does the plot have around it?
 
   let el: HTMLDivElement;
@@ -83,10 +83,24 @@
       .attr("viewBox", [0, 0, chart_w, chart_h])
       .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
+    const grid_opacity = 0.1;
+    const x_axis_offset = 5;
     svg
       .append("g")
-      .attr("transform", `translate(0,${chart_h - margin_bottom})`)
-      .call(x_axis);
+      .attr(
+        "transform",
+        `translate(0,${chart_h - margin_bottom + x_axis_offset})`
+      )
+      .call(x_axis)
+      .call((g) => {
+        g.selectAll(".tick line")
+          .attr("y2", margin_top + margin_bottom - x_axis_offset * 2 - chart_h)
+          .attr("stroke-opacity", grid_opacity);
+      })
+      .call((g) => {
+        g.selectAll(".tick text").attr("y", 5);
+      })
+      .call((g) => g.select(".domain").remove());
 
     svg
       .append("g")
@@ -95,19 +109,21 @@
       .call((g) => g.select(".domain").remove())
       .call((g) => {
         g.selectAll(".tick line")
-          .clone()
           .attr("x2", chart_w - margin_left - margin_right)
-          .attr("stroke-opacity", 0.1);
+          .attr("stroke-opacity", grid_opacity);
       })
-      .call((g) =>
-        g
-          .append("text")
-          .attr("x", -margin_left)
-          .attr("y", 10)
-          .attr("fill", "currentColor")
-          .attr("text-anchor", "start")
-          .text(unit)
-      );
+      .call((g) => {
+        const axis_ticks = g.selectAll(".tick text").attr("x", -2);
+        const num_ticks = axis_ticks.size();
+        axis_ticks.each(function (d, i) {
+          if (i != num_ticks - 1) return;
+          d3.select(this)
+            .append("tspan")
+            .text(` ${unit}`)
+            .style("opacity", 0.5)
+            .style("font-size", "0.9em");
+        });
+      });
 
     svg
       .append("path")
@@ -121,8 +137,8 @@
       const obs = min_or_max == "min" ? min_obs : max_obs;
       const x_pos = x_scale(obs.time);
       const y_pos = y_scale(obs.val);
-      const above = min_or_max === "min";
-      const text_offset = 25 * (above ? 1 : -1);
+      const above = min_or_max === "max";
+      const text_offset = 15 * (above ? 1 : -1);
       const pad = 2;
 
       svg
@@ -210,7 +226,7 @@
     font-size: 0.8rem;
     font-weight: 300;
     padding: 1px;
-    background-color: hsla(var(--plot-bg-hsl) / 20%);
+    background-color: hsla(var(--plot-bg-hsl) / 80%);
     position: absolute;
     transform: translate(-50%, 50%);
   }
