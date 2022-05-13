@@ -6,11 +6,6 @@
 
   type Observation = { val: number; time: Date };
 
-  const margin_top = 20; // top margin, in pixels
-  const margin_right = 30; // right margin, in pixels
-  const margin_bottom = 30; // bottom margin, in pixels
-  const margin_left = 40;
-
   const extents_by_measure: Record<Measurement, [number, number]> = {
     temp: [60, 80],
     co2: [300, 1000],
@@ -24,11 +19,19 @@
 
 <script lang="ts">
   import * as d3 from "d3";
-
   import { onMount } from "svelte";
   import type { Measurement, ParsedReading } from "./Summary.svelte";
 
+  const margin_top = 20; // top margin, in pixels
+  const margin_right = 30; // right margin, in pixels
+  const margin_bottom = 30; // bottom margin, in pixels
+  const margin_left = 40;
+  const container_pad = 18; // How much padding does the plot have around it?
+
   let el: HTMLDivElement;
+  let min_annotation: HTMLSpanElement;
+  let max_annotation: HTMLSpanElement;
+
   export let unit: string;
   export let data: ParsedReading[];
   export let name: Measurement;
@@ -95,8 +98,6 @@
           .clone()
           .attr("x2", chart_w - margin_left - margin_right)
           .attr("stroke-opacity", 0.1);
-
-        g.selectAll(".tick").style("opacity", 0.5);
       })
       .call((g) =>
         g
@@ -116,17 +117,13 @@
       .attr("stroke-opacity", 0.65)
       .attr("d", line(observations));
 
-    const anotate_point = (
-      obs: Observation,
-      above_or_below: "above" | "below"
-    ) => {
+    const anotate_point = (min_or_max: "min" | "max") => {
+      const obs = min_or_max == "min" ? min_obs : max_obs;
       const x_pos = x_scale(obs.time);
       const y_pos = y_scale(obs.val);
-      const above = above_or_below === "above";
-      const offset_amnt = 20;
-      const text_offset = offset_amnt * (above ? 1 : -1);
+      const above = min_or_max === "min";
+      const text_offset = 25 * (above ? 1 : -1);
       const pad = 2;
-      const color = "darkgrey";
 
       svg
         .append("line")
@@ -138,31 +135,32 @@
         .attr("y1", y_pos + (above ? -1 : 1) * pad)
         .attr("y2", y_pos - text_offset + (above ? 1 : -1) * pad);
 
-      svg
-        .append("text")
-        .attr("x", x_pos)
-        .attr("y", y_pos - text_offset)
-        .attr("text-anchor", "middle")
-        .attr("alignment-baseline", above ? "baseline" : "hanging")
-        .attr("stroke-width", 1)
-        .style("font-size", "0.8rem")
-        .style("font-weight", "300")
-        .text(format_num(obs.val));
+      const span_el = min_or_max == "max" ? max_annotation : min_annotation;
+      span_el.style.left = `${x_pos + container_pad}px`;
+      span_el.style.bottom = `${
+        chart_h - y_pos + container_pad + text_offset
+      }px`;
     };
 
-    anotate_point(max_obs, "below");
-    anotate_point(min_obs, "above");
+    anotate_point("max");
+    anotate_point("min");
     el.append(svg.node());
   });
 </script>
 
-<div class="container">
+<div class="container" style="--container-pad:{container_pad}px">
   <h2>
     {name} : {current_value}
     <span class="units">{unit}</span>
   </h2>
 
   <div class="line-chart" bind:this={el} />
+  <span class="annotation" bind:this={min_annotation}
+    >{format_num(min_obs.val)}</span
+  >
+  <span class="annotation" bind:this={max_annotation}
+    >{format_num(max_obs.val)}</span
+  >
 </div>
 
 <style>
@@ -176,15 +174,18 @@
       1.5px 3.4px 4.2px -1.7px hsl(var(--shadow-color) / 0.36),
       3.6px 8.2px 10.1px -2.5px hsl(var(--shadow-color) / 0.36);
 
+    --plot-bg-hsl: 180 50% 93%;
     margin-inline: auto;
     margin-block: 15px;
     box-shadow: var(--shadow-elevation-medium);
-    background-color: hsl(180 50% 93%);
+    background-color: hsl(var(--plot-bg-hsl));
     color: hsl(248 31% 15%);
     width: min(500px, 100%);
-    padding: 15px;
+    /* This variable gets set with inline css variable in the html template */
+    padding: var(--container-pad, 0px);
 
-    border-radius: 1px;
+    border-radius: 3px;
+    position: relative;
   }
 
   h2 {
@@ -203,6 +204,14 @@
 
   .line-chart {
     height: 150px;
-    outline: 2px solid green;
+  }
+
+  .annotation {
+    font-size: 0.8rem;
+    font-weight: 300;
+    padding: 1px;
+    background-color: hsla(var(--plot-bg-hsl) / 20%);
+    position: absolute;
+    transform: translate(-50%, 50%);
   }
 </style>
