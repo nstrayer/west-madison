@@ -1,10 +1,4 @@
 <script context="module" lang="ts">
-  function roundTo(x: number, precision: number) {
-    const multiplier = Math.pow(10, precision);
-
-    return Math.round(x * multiplier) / multiplier;
-  }
-
   function avgVal(arr: number[], precision: number = 1) {
     const n_obs = arr.length;
     return arr.reduce((s, x) => s + x / n_obs, 0);
@@ -44,20 +38,10 @@
     time: d.time,
   }));
 
-  // console.log(name, observations);
-  const n_obs = observations.length;
-
   const values = observations.map((x) => x.val);
-  const average_value = format_num(avgVal(values));
   const current_value = format_num(avgVal(values.slice(-10)));
-  const min_val = format_num(d3.min(values));
-  const max_val = format_num(d3.max(values));
-
   const min_obs = observations[d3.minIndex(values)];
   const max_obs = observations[d3.maxIndex(values)];
-  // console.log(name, { min_obs, max_obs });
-
-  // console.log(`Max ${name}: ${max_val}${unit}`);
 
   const [y_min, y_max] = d3.extent(data, (d) => d[name]);
   const y_domain = extents_by_measure[name];
@@ -65,8 +49,6 @@
   if (y_domain[1] < y_max) y_domain[1] = y_max;
 
   const x_domain = d3.extent(data, (d) => d.time);
-
-  const I = d3.range(n_obs);
 
   onMount(() => {
     const chart_w = el.offsetWidth;
@@ -193,7 +175,6 @@
       0.6px 1.3px 1.6px -0.8px hsl(var(--shadow-color) / 0.36),
       1.5px 3.4px 4.2px -1.7px hsl(var(--shadow-color) / 0.36),
       3.6px 8.2px 10.1px -2.5px hsl(var(--shadow-color) / 0.36);
-    /* outline: 1px solid salmon; */
 
     margin-inline: auto;
     margin-block: 15px;
@@ -222,5 +203,6 @@
 
   .line-chart {
     height: 150px;
+    outline: 2px solid green;
   }
 </style>
